@@ -1,7 +1,9 @@
 ```markdown
 # Waste Classifier 
 
-TIt uses TensorFlow / Keras with transfer learning and provides scripts to:
+THIS PTOJECT STILL UNDER DEVELOPMENT (77.2% VAL ACCURACY)
+
+ uses TensorFlow / Keras with transfer learning and provides scripts to:
 
 - Prepare Dataset
 - Train a classifier (transfer learning with MobileNetV2)
@@ -41,9 +43,11 @@ In terminal venv, run this:
 
 1. python .\src\train2.py --data_dir data/train --epochs 20 --batch_size 32 --model_out model/model2.h5
 
-2. python .\src\test.py --model model/model2.h5 --img data/val  
+2. python .\src\test.py --model model/model2.h5 --img data/val  or  python ./src/test.py --model model/model2.h5 --img https://healthscopemag.com/wp-content/uploads/2013/05/Plastic.FI_.jpg or python .\src\test.py --model model/model2.h5 --img data/val/trash/trash4.jpg
 
-Note: just adjust the file name and parameter if you train another model 
+Note: just adjust the file path or parameter or img url if you train another model 
+
+
 
 
 
