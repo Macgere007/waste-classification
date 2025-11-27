@@ -30,7 +30,7 @@ Usage (basic):
 
 1. Create virtualenv
    python -m venv venv
-   source venv/bin/activate
+   venv\Scripts\activate
 
 2. Install dependencies
    pip install -r requirements.txt
