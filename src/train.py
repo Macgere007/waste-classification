@@ -2,59 +2,86 @@ import argparse
 import os
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.applications import MobileNet
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 
-def build_model(num_classes, input_shape=(224,224,3), learning_rate=1e-4):
-    base_model = MobileNet(weights='imagenet', include_top=False, input_shape=input_shape)
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    outputs = Dense(num_classes, activation='softmax')(x)
-    model = Model(inputs=base_model.input, outputs=outputs)
-    
-    # Freeze base model layers
-    for layer in base_model.layers:
-        layer.trainable = False
-    
-    model.compile(optimizer=Adam(learning_rate), loss='categorical_crossentropy', metrics=['accuracy'])
+def build_cnn(input_shape=(128,128,3), num_classes=2):
+    model = Sequential([
+        Conv2D(32, (3,3), activation='relu', input_shape=input_shape),
+        MaxPooling2D((2,2)),
+        BatchNormalization(),
+
+        Conv2D(64, (3,3), activation='relu'),
+        MaxPooling2D((2,2)),
+        BatchNormalization(),
+
+        Conv2D(128, (3,3), activation='relu'),
+        MaxPooling2D((2,2)),
+        BatchNormalization(),
+
+        Flatten(),
+        Dense(128, activation='relu'),
+        Dropout(0.5),
+        Dense(num_classes, activation='softmax')
+    ])
+
+    model.compile(
+        optimizer='adam',
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
+    )
+
     return model
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', required=True, help='Directory containing train/val folders')
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--data_dir', required=True, help='Directory containing train/ and val/ folders')
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--model_out', required=True, help='Path to save trained model')
     args = parser.parse_args()
 
-    # Make sure the output directory exists
+    # Ensure output directory exists
     os.makedirs(os.path.dirname(args.model_out), exist_ok=True)
 
-    # Image data generators
-    datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
+    train_dir = os.path.join(args.data_dir, "train")
+    val_dir = os.path.join(args.data_dir, "val")
 
-    train_generator = datagen.flow_from_directory(
-        args.data_dir,
-        target_size=(224,224),
-        batch_size=args.batch_size,
-        class_mode='categorical',
-        subset='training'
+    if not os.path.isdir(train_dir) or not os.path.isdir(val_dir):
+        raise ValueError("data_dir must contain 'train/' and 'val/' folders")
+
+    # Data augmentation for training
+    train_datagen = ImageDataGenerator(
+        rescale=1./255,
+        rotation_range=20,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        horizontal_flip=True
     )
 
-    val_generator = datagen.flow_from_directory(
-        args.data_dir,
-        target_size=(224,224),
+    val_datagen = ImageDataGenerator(rescale=1./255)
+
+    train_generator = train_datagen.flow_from_directory(
+        train_dir,
+        target_size=(64,64),
         batch_size=args.batch_size,
         class_mode='categorical',
-        subset='validation'
+        shuffle=True
+    )
+
+    val_generator = val_datagen.flow_from_directory(
+        val_dir,
+        target_size=(64,64),
+        batch_size=args.batch_size,
+        class_mode='categorical',
+        shuffle=False
     )
 
     num_classes = len(train_generator.class_indices)
     print(f"Detected {num_classes} classes: {train_generator.class_indices}")
 
-    model = build_model(num_classes)
+    model = build_cnn(input_shape=(64,64,3), num_classes=num_classes)
+    model.summary()
 
     model.fit(
         train_generator,
@@ -64,7 +91,7 @@ def main():
     )
 
     model.save(args.model_out)
-    print(f"Model saved to {args.model_out}")
+    print(f"\nModel saved to {args.model_out}")
 
 if __name__ == "__main__":
     main()

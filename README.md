@@ -41,9 +41,9 @@ Usage (basic):
 
 In terminal venv, run this:
 
-1. python .\src\train2.py --data_dir data/train --epochs 20 --batch_size 32 --model_out model/model2.h5
+1. run python .\src\train.py --data_dir .\NEW_DATASET --epochs 20 --batch_size 32 --model_out .\models\waste_cnn.h5
 
-2. python .\src\test.py --model model/model2.h5 --img data/val  or  python ./src/test.py --model model/model2.h5 --img https://healthscopemag.com/wp-content/uploads/2013/05/Plastic.FI_.jpg or python .\src\test.py --model model/model2.h5 --img data/val/trash/trash4.jpg
+2. run python .\src\test.py 
 
 Note: just adjust the file path or parameter or img url if you train another model 
 
